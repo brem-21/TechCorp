@@ -71,62 +71,42 @@ This design ensures proper normalization and avoids redundancy, maintaining refe
 
 # PART 2
 ```sql
-DELIMITER //
+-- start transaction
+START TRANSACTION;
 
-CREATE PROCEDURE PlaceOrder(
-    IN NEW_ORDER_ID INT, 
-    IN CUSTOMER_ID INT, 
-    IN TOTAL_AMOUNT DECIMAL(10,2)
-)
-BEGIN
-    DECLARE done INT DEFAULT FALSE;
-    DECLARE current_product_id INT;
-    DECLARE current_quantity INT;
+-- customer with id 2 places an order. We record the order in the order table
+INSERT INTO orders(order_date, customer_id)
+VALUES(CURDATE(), 2);
 
-    -- Declare cursor for fetching order items from a temporary table
-    DECLARE order_cursor CURSOR FOR SELECT ProductID, Quantity FROM TempOrderItems;
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+SET @order_id = LAST_INSERT_ID();
 
-    -- Start transaction
-    START TRANSACTION;
+-- first product details
+SET @1st_product_id = 1;
+SET @1st_product_quantity = 2;
 
-    -- Step 1: Insert a new order record
-    INSERT INTO orders (OrderID, CustomerID, OrderDate, Total)
-    VALUES (NEW_ORDER_ID, CUSTOMER_ID, NOW(), TOTAL_AMOUNT);
+-- second product details
+SET @2nd_product_id = 3;
+SET @2nd_product_quantity = 5;
 
-    OPEN order_cursor;
+-- add individual items in the order to the order details table and reduce the stock quantity in the inventory table
+-- 1st product
+INSERT INTO order_details(order_id, product_id, quantity, total)
+VALUES(@order_id, @1st_product_id, @1st_product_quantity, @1st_product_quantity * (SELECT price FROM product WHERE product_id = @1st_product_id));
 
-    read_loop: LOOP
-        FETCH order_cursor INTO current_product_id, current_quantity;
-        IF done THEN
-            LEAVE read_loop;
-        END IF;
+UPDATE inventory
+SET stock_quantity = stock_quantity - @1st_product_quantity
+WHERE product_id = @1st_product_id;
 
-        -- Step 2: Add each item to the OrderDetails table
-        INSERT INTO OrderDetails (OrderID, ProductID, Quantity, Price)
-        VALUES (NEW_ORDER_ID, current_product_id, current_quantity, 
-                (SELECT Price FROM products WHERE ProductID = current_product_id));
+-- 2nd product
+INSERT INTO order_details(order_id, product_id, quantity, total)
+VALUES(@order_id, @2nd_product_id, @2nd_product_quantity, @2nd_product_quantity * (SELECT price FROM product WHERE product_id = @2nd_product_id));
 
-        -- Step 3: Decrease the quantity in stock for each product
-        UPDATE products
-        SET StockQuantity = StockQuantity - current_quantity
-        WHERE ProductID = current_product_id;
+UPDATE inventory
+SET stock_quantity = stock_quantity - @2nd_product_quantity
+WHERE product_id = @2nd_product_id;
 
-        -- Check if the stock is sufficient
-        IF (SELECT StockQuantity FROM products WHERE ProductID = current_product_id) < 0 THEN
-            ROLLBACK;  -- Roll back the transaction if stock is insufficient
-            SELECT 'Transaction failed: Insufficient stock for ProductID ' AS ErrorMessage;
-            LEAVE read_loop;
-        END IF;
-    END LOOP;
-
-    CLOSE order_cursor;
-
-    -- Commit the transaction if all steps succeed
-    COMMIT;
-END //
-
-DELIMITER ;
+-- commit the transaction
+COMMIT;
 ```
 
 
@@ -136,14 +116,14 @@ DELIMITER ;
  -- Transaction 1
 BEGIN;
 SELECT * FROM TechCorp.products WHERE product_id = 101 FOR update;
-update part_three.products SET stock_quantity = stock_quantity - 5 WHERE product_id = 101;
+update TechCorp.products SET stock_quantity = stock_quantity - 5 WHERE product_id = 101;
 COMMIT;
 
 -- Taylors Transaction
 -- Transaction 2
 BEGIN;
 SELECT * FROM TechCorp.products WHERE product_id = 101 For Update;
-Update part_three.products SET stock_quantity = stock_quantity - 5 where product_id = 101;
+Update TechCorp.products SET stock_quantity = stock_quantity - 5 where product_id = 101;
 COMMIT;
 ```
 
