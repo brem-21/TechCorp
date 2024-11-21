@@ -129,6 +129,7 @@ TechCorp’s online store has only 10 units of the "TechCorp Smart Speaker" left
 
 ## Potential Issues
 Lost Update: Both transactions succeed without considering the other, resulting in stock levels falling below zero.
+
 Dirty Read: One transaction reads data that has been modified but not committed by another transaction, causing incorrect or inconsistent results.
 A row-level lock ensures that only one transaction can modify a specific row in the database at a time.
 ```sql
