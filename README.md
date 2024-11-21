@@ -2,211 +2,72 @@
 
 ![alt text](<assignment (3).jpg>)
 
-# DATABASE NORMALIZATION IN 3NF
-Based on the table given, we can see that the table is not in 3NF. We can normalize it by splitting it. Already, the case study mentioned the table consists of products, customers, orders and inventory table.
 
-
-
-
-
-Certainly! Below is the **README** with necessary Markdown tags for a clean and structured format. This includes headings, code blocks, lists, and tables with proper syntax.
-
-```markdown
-# Database Normalization README
-
-This document explains how to normalize the columns **OrderID**, **CustomerName**, **ProductID**, **ProductName**, **Category**, **CustomerAddress**, **Supplier**, **OrderDate**, **Quantity**, **Price**, and **Total** through the different normal forms: **1NF**, **2NF**, and **3NF**. The objective of this normalization process is to break down the attributes into tables that minimize redundancy, improve data integrity, and facilitate easier maintenance.
-
----
-
-## Table of Contents
-
-- [Step 1: Original Columns (Unnormalized Form)](#step-1-original-columns-unnormalized-form)
-- [Step 2: 1st Normal Form (1NF)](#step-2-1st-normal-form-1nf)
-- [Step 3: 2nd Normal Form (2NF)](#step-3-2nd-normal-form-2nf)
-- [Step 4: 3rd Normal Form (3NF)](#step-4-3rd-normal-form-3nf)
-- [Conclusion](#conclusion)
-
----
-
-## Step 1: Original Columns (Unnormalized Form)
-
-In the original unnormalized form, we have the following columns:
-
-- **OrderID**
-- **CustomerName**
-- **ProductID**
-- **ProductName**
-- **Category**
-- **CustomerAddress**
-- **Supplier**
-- **OrderDate**
-- **Quantity**
-- **Price**
-- **Total**
-
-### Issues:
-1. **Data Redundancy**: Repeating customer information (like `CustomerName` and `CustomerAddress`) for each order.
-2. **Partial Dependency**: Certain attributes depend only on parts of the primary key (e.g., `CustomerName` depends on `OrderID`, not `ProductID`).
-3. **Transitive Dependency**: Attributes like `Total` are derived from `Quantity` and `Price`, causing redundancy.
-
----
-
-## Step 2: 1st Normal Form (1NF)
-
-### **1NF Requirements:**
-- All attributes must contain **atomic values** (no multiple values or arrays).
-- Each record should be **unique**, meaning no repeating rows.
-
-In this case, the table already contains atomic values. To ensure uniqueness, we need a **primary key**. In this case, **OrderID** is a unique identifier for each order, but if we have multiple products per order, we could use a composite key of **(OrderID, ProductID)**.
-
-#### **1NF Table Structure (with primary key)**:
-| **Column Name**   | **Description**                                      |
-|-------------------|------------------------------------------------------|
-| `OrderID`         | Unique identifier for each order.                   |
-| `CustomerName`    | Name of the customer who placed the order.          |
-| `ProductID`       | Unique identifier for the product.                  |
-| `ProductName`     | Name of the product being ordered.                  |
-| `Category`        | Category of the product (e.g., Electronics, Furniture). |
-| `CustomerAddress` | Address of the customer.                            |
-| `Supplier`        | Supplier of the product.                            |
-| `OrderDate`       | The date the order was placed.                      |
-| `Quantity`        | Number of units ordered.                            |
-| `Price`           | Price of one unit of the product.                   |
-| `Total`           | Total price (`Quantity * Price`), but can be calculated. |
-
-- **Primary Key**: `OrderID` (or composite key `OrderID, ProductID` if multiple products per order).
-
----
-
-## Step 3: 2nd Normal Form (2NF)
-
-### **2NF Requirements:**
-- The table must be in **1NF**.
-- All **non-key attributes** must be **fully functionally dependent** on the **primary key**.
-- No **partial dependencies** (where non-key attributes depend on part of the composite primary key).
-
-### **Analysis for 2NF**:
-- **CustomerName**, **CustomerAddress**, and **OrderDate** depend only on `OrderID`, not on `ProductID`.
-- **ProductName**, **Category**, and **Price** depend only on `ProductID`, not on `OrderID`.
-
-This implies a **partial dependency**, so we need to split the columns into different tables.
-
-#### **Tables in 2NF**:
-
-1. **Orders Table** (Order-related information):
-   | **Column Name**   | **Description**                                      |
-   |-------------------|------------------------------------------------------|
-   | `OrderID`         | Unique identifier for each order.                   |
-   | `CustomerName`    | Name of the customer who placed the order.          |
-   | `CustomerAddress` | Address of the customer.                            |
-   | `Supplier`        | Supplier of the product.                            |
-   | `OrderDate`       | The date the order was placed.                      |
-
-   - **Primary Key**: `OrderID`
-
-2. **Products Table** (Product-related information):
-   | **Column Name**   | **Description**                                      |
-   |-------------------|------------------------------------------------------|
-   | `ProductID`       | Unique identifier for the product.                  |
-   | `ProductName`     | Name of the product being ordered.                  |
-   | `Category`        | Category of the product (e.g., Electronics, Furniture). |
-   | `Price`           | Price of one unit of the product.                   |
-
-   - **Primary Key**: `ProductID`
-
-3. **OrderDetails Table** (Order and product relationship, stores `Quantity` and `Total`):
-   | **Column Name**   | **Description**                                      |
-   |-------------------|------------------------------------------------------|
-   | `OrderID`         | Foreign Key, references `OrderID` in **Orders**.     |
-   | `ProductID`       | Foreign Key, references `ProductID` in **Products**. |
-   | `Quantity`        | Number of units ordered.                            |
-   | `Total`           | Calculated total (`Quantity * Price`).               |
-
-   - **Primary Key**: (`OrderID`, `ProductID`)
-   - **Foreign Keys**:
-     - `OrderID` references `OrderID` in **Orders**.
-     - `ProductID` references `ProductID` in **Products**.
-
----
-
-## Step 4: 3rd Normal Form (3NF)
-
-### **3NF Requirements:**
-- The table must be in **2NF**.
-- There should be **no transitive dependencies**, meaning non-key attributes must not depend on other non-key attributes.
-
-### **Analysis for 3NF**:
-- In the **OrderDetails** table, the **Total** column is derived from `Quantity` and `Price`. This is a **transitive dependency** because `Total` can be calculated based on `Quantity` and `Price`. Storing `Total` is redundant.
-
-### **Normalization to 3NF**:
-- We **remove the `Total` column** from the **OrderDetails** table since it can be calculated dynamically.
-
-#### **3NF Tables**:
-
-1. **Orders Table** (unchanged from 2NF):
-   | **Column Name**   | **Description**                                      |
-   |-------------------|------------------------------------------------------|
-   | `OrderID`         | Unique identifier for each order.                   |
-   | `CustomerName`    | Name of the customer who placed the order.          |
-   | `CustomerAddress` | Address of the customer.                            |
-   | `Supplier`        | Supplier of the product.                            |
-   | `OrderDate`       | The date the order was placed.                      |
-
-   - **Primary Key**: `OrderID`
-
-2. **Products Table** (unchanged from 2NF):
-   | **Column Name**   | **Description**                                      |
-   |-------------------|------------------------------------------------------|
-   | `ProductID`       | Unique identifier for the product.                  |
-   | `ProductName`     | Name of the product being ordered.                  |
-   | `Category`        | Category of the product (e.g., Electronics, Furniture). |
-   | `Price`           | Price of one unit of the product.                   |
-
-   - **Primary Key**: `ProductID`
-
-3. **OrderDetails Table** (removes `Total` column):
-   | **Column Name**   | **Description**                                      |
-   |-------------------|------------------------------------------------------|
-   | `OrderID`         | Foreign Key, references `OrderID` in **Orders**.     |
-   | `ProductID`       | Foreign Key, references `ProductID` in **Products**. |
-   | `Quantity`        | Number of units ordered.                            |
-
-   - **Primary Key**: (`OrderID`, `ProductID`)
-   - **Foreign Keys**:
-     - `OrderID` references `OrderID` in **Orders**.
-     - `ProductID` references `ProductID` in **Products**.
-
----
-
-## Conclusion
-
-By following the steps of normalization, we have:
-- **Eliminated redundancy** by breaking down the original columns into separate tables.
-- **Eliminated partial dependencies** by ensuring that non-key attributes depend on the full primary key.
-- **Eliminated transitive dependencies** by removing the `Total` column, which was a derived value.
-
-### **Primary and Foreign Keys**:
-- **Primary Keys**: Ensure that each record in a table is unique.
-- **Foreign Keys**: Ensure referential integrity between related tables, linking `OrderDetails` to both `Orders` and `Products`.
-
-This normalized structure ensures better data integrity, reduces redundancy, and facilitates easier maintenance in the long
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+### Explanation of Design Choices for Primary and Foreign Keys in Normalized Tables
+After normalizing the initial table, it was broken down into seven tables:
+1. **Customer Table**
+2. **Products Table**
+3. **Orders Table**
+4. **Inventory Table**
+5. **Order Details Table**
+6. **City Table**
+7. **Country Table**
+
+#### **Customer Table**
+The **Customer** table stores data about customers and initially had four attributes:
+- `customer_id`: A primary key introduced to uniquely identify each customer.
+- `customer_name`
+- `customer_email`
+- `customer_address`
+The `customer_address` field contained two components: **city** and **country**, which violated the 1st Normal Form. To resolve this, the address was divided into two separate tables: **City Table** and **Country Table**, and the `customer_address` field in the **Customer Table** was replaced with a reference to the **City Table**.
+After normalization, the **Customer Table** had the following attributes:
+- `customer_id`: Primary key for unique customer identification.
+- `customer_name`
+- `customer_email`
+- `city_id`: A foreign key referencing the **City Table**.
+#### **City Table**
+The **City Table** stores information about cities and their associated countries. Its attributes are:
+- `city_id`: Primary key for unique city identification.
+- `city_name`
+- `country_id`: A foreign key referencing the **Country Table**.
+#### **Country Table**
+The **Country Table** stores details about countries and has the following attributes:
+- `country_id`: Primary key for unique country identification.
+- `country_name`
+#### **Products Table**
+The **Products Table** stores information about products, with the following attributes:
+- `product_id`: Primary key for unique product identification.
+- `product_name`
+- `price`
+- `category`
+#### **Orders Table**
+The **Orders Table** stores details of orders placed by customers. Its attributes are:
+- `order_id`: Primary key for unique order identification.
+- `order_date`
+- `customer_id`: A foreign key referencing the customer who placed the order.
+#### **Inventory Table**
+The **Inventory Table** stores information about products, their stock levels, and suppliers. It has the following attributes:
+- `supplier_id`: Primary key for unique supplier identification.
+- `supplier_name`
+- `stock_quantity`
+- `product_id`: A foreign key referencing the **Products Table**.
+#### **Order Details Table**
+The **Order Details Table** captures the details of products within an order. Its attributes are:
+- `order_details_id`: Primary key for unique identification of a specific product in an order.
+- `order_id`: A foreign key referencing the **Orders Table**.
+- `quantity`
+- `product_id`: A foreign key referencing the **Products Table**.
+- `total`
+#### Finalized Table Structure
+After normalization, the complete set of tables includes:
+1. **Customer Table**
+2. **City Table**
+3. **Country Table**
+4. **Products Table**
+5. **Orders Table**
+6. **Inventory Table**
+7. **Order Details Table**
+This design ensures proper normalization and avoids redundancy, maintaining referential integrity between the tables.
 
 
 
@@ -216,12 +77,16 @@ Creating a database named ProductCatalog,
 ![alt text](image.png)
 
 A collection named Product
+
 ![alt text](image-1.png)
 
 Mongo queries to insert data into the collection.
 To insert a single document to the collection, use the insert_one() method.
-    FOR ELECTRONICS;
-    db.products.insertOne({
+   ### FOR ELECTRONICS;
+   ### For Electronics
+
+```javascript
+db.products.insertOne({
   "ProductID": "E123456",
   "Name": "Smartphone X10",
   "Brand": "TechNova",
@@ -241,8 +106,10 @@ To insert a single document to the collection, use the insert_one() method.
   "ReleaseDate": ISODate("2023-05-01T00:00:00Z"),
   "Category": "Electronics"
 });
+````
 
-FOR CLOTHING;
+  ### FOR CLOTHING;
+   ```javascript
     db.products.insertOne({
   "ProductID": "C987654",
   "Name": "Men's T-Shirt",
@@ -255,7 +122,9 @@ FOR CLOTHING;
   "Category": "Clothing",
   "Gender": "Male"
 });
- FOR BOOK;
+```
+### FOR BOOK;
+```javascript
     db.products.insertOne({
   "ProductID": "B543210",
   "Title": "The Great Adventure",
@@ -269,9 +138,11 @@ FOR CLOTHING;
   "Language": "English",
   "Category": "Books"
 });
+```
 
-
-To insert multiple documents to the collection, use the insert_many() method.db.products.insertMany([
+To insert multiple documents to the collection, use the insert_many() method.
+```javascript
+db.products.insertMany([
   // Electronics products
   {
     "ProductID": "E123456",
@@ -368,6 +239,7 @@ To insert multiple documents to the collection, use the insert_many() method.db.
     "Category": "Books"
   }
 ]);
+````
 
 ![alt text](image-2.png)
 
