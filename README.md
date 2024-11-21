@@ -1,8 +1,8 @@
 # TechCorp
 
-![alt text](<assignment (3).jpg>)
+![alt text](lab2normalization.jpg)
 
-
+# PART 1
 ### Explanation of Design Choices for Primary and Foreign Keys in Normalized Tables
 After normalizing the initial table, it was broken down into seven tables:
 1. **Customer Table**
@@ -69,12 +69,97 @@ After normalization, the complete set of tables includes:
 7. **Order Details Table**
 This design ensures proper normalization and avoids redundancy, maintaining referential integrity between the tables.
 
+# PART 2
+This implementation ensures effective transaction management following ACID properties, ensuring accurate and dependable stock management for TechCorp's online store.
+```sql
+DELIMITER $$
 
+CREATE PROCEDURE PlaceOrder()
+BEGIN
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+        ROLLBACK; 
+
+    START TRANSACTION;
+
+    -- customer with id 2 places an order. We record the order in the order table
+    INSERT INTO orders(order_date, customer_id)
+    VALUES(CURDATE(), 2);
+
+    SET @order_id = LAST_INSERT_ID();
+
+    -- first product details
+    SET @1st_product_id = 1;
+    SET @1st_product_quantity = 2;
+
+    -- second product details
+    SET @2nd_product_id = 3;
+    SET @2nd_product_quantity = 5;
+
+    -- add individual items in the order to the order details table and reduce the stock quantity in the inventory table
+    -- 1st product
+    INSERT INTO order_details(order_id, product_id, quantity, total)
+    VALUES(@order_id, @1st_product_id, @1st_product_quantity, @1st_product_quantity * (SELECT price FROM product WHERE product_id = @1st_product_id));
+
+    UPDATE inventory
+    SET stock_quantity = stock_quantity - @1st_product_quantity
+    WHERE product_id = @1st_product_id;
+
+    -- 2nd product
+    INSERT INTO order_details(order_id, product_id, quantity, total)
+    VALUES(@order_id, @2nd_product_id, @2nd_product_quantity, @2nd_product_quantity * (SELECT price FROM product WHERE product_id = @2nd_product_id));
+
+    UPDATE inventory
+    SET stock_quantity = stock_quantity - @2nd_product_quantity
+    WHERE product_id = @2nd_product_id;
+
+    -- commit the transaction
+    COMMIT;
+
+END$$
+
+DELIMITER ;
+
+CALL PlaceOrder();
+```
+
+
+# PART 3
+
+TechCorp’s online store has only 10 units of the "TechCorp Smart Speaker" left in stock. Two customers, Alex and Taylor, simultaneously place orders for 5 units each. Without proper concurrency controls, both transactions could succeed, resulting in a negative stock balance.
+
+## Potential Issues
+Lost Update: Both transactions succeed without considering the other, resulting in stock levels falling below zero.
+Dirty Read: One transaction reads data that has been modified but not committed by another transaction, causing incorrect or inconsistent results.
+A row-level lock ensures that only one transaction can modify a specific row in the database at a time.
+```sql
+ -- Alex Transaction
+ -- Transaction 1
+ -- Begin the transaction
+BEGIN;
+-- Place a row-level lock on ProductID 101
+SELECT * FROM TechCorp.products WHERE product_id = 101 FOR update;
+-- DECREASE stock quantity by 5
+update TechCorp.products SET stock_quantity = stock_quantity - 5 WHERE product_id = 101;
+-- Commit the transaction
+COMMIT;
+
+-- Taylors Transaction
+-- Transaction 2
+-- Begin the transaction
+BEGIN;
+-- wait for the lock to release and then place a row-level lock on ProductID 101
+SELECT * FROM TechCorp.products WHERE product_id = 101 For Update;
+-- Verify stock and decrese it by 5
+Update TechCorp.products SET stock_quantity = stock_quantity - 5 where product_id = 101;
+-- Commit the transaction
+COMMIT;
+```
 
 
 # PART 4
 Creating a database named ProductCatalog,
 ![alt text](image.png)
+
 
 A collection named Product
 
@@ -248,7 +333,7 @@ db.products.insertMany([
 # PART 5
 ![alt text](datalake.jpg)
 
-For TechCorp, the data lake serves as a central location where all kinds of data (e.g., products, customers, orders, inventory) from various sources can be ingested, stored, processed, and analyzed. The data lake allows the company to efficiently move away from the current monolithic table, which causes redundancy and performance issues, and transition to a more modern, scalable system.
+For TechCorp, the data lake serves as a central location where all kinds of data (e.g., products, customers, orders, inventory) from various sources can be ingested, stored, processed, and analyzed. The data lake allows the company to efficiently move away from the current unorganized table, which causes redundancy and performance issues, and transition to a more modern, scalable system.
 
 ## Data Ingestion (Batch/Scheduled & Real-Time Streaming):
 
