@@ -69,6 +69,10 @@ After normalization, the complete set of tables includes:
 7. **Order Details Table**
 This design ensures proper normalization and avoids redundancy, maintaining referential integrity between the tables.
 
+Normalization is a process used in database design to reduce redundancy and improve data integrity by organizing data into smaller, related tables. By minimizing redundancy, normalization ensures that data is stored in a single location, which eliminates issues such as update anomalies, where changes to data must be made in multiple places, and inconsistencies arise if some instances are missed. Additionally, normalization enhances data integrity by avoiding insertion anomalies, where adding new information requires irrelevant or incomplete data, and deletion anomalies, where removing a record could unintentionally delete critical information. It also enforces relationships between tables using constraints such as foreign keys, ensuring accurate and consistent data.
+
+However, normalization comes with trade-offs. While it reduces redundancy and improves data integrity, it can increase database complexity by requiring more tables and relationships. Query performance may also be impacted due to the need for frequent joins, especially in read-heavy applications or when dealing with large datasets. In such cases, denormalization might be necessary, where redundancy is reintroduced to simplify queries and enhance performance. Denormalization is commonly used in applications where quick data retrieval is prioritized over strict adherence to normalization principles, such as in analytics and reporting systems.
+
 # PART 2
 This implementation ensures effective transaction management following ACID properties, ensuring accurate and dependable stock management for TechCorp's online store.
 ```sql
